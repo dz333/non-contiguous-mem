@@ -1,0 +1,18 @@
+SRC = hello.cpp
+TARGET = hello
+LL = hello.ll
+ASM = hello.S
+
+all: $(TARGET)
+
+$(TARGET): $(SRC)
+	clang++ -O2 $^ -o $@
+
+$(LL): $(SRC)
+	clang++ -O2 $^ -S -emit-llvm -o $@
+
+$(ASM): $(LL)
+	llc $< -o $@
+
+clean:
+	rm -f $(TARGET) $(LL) $(ASM) *~
