@@ -1,5 +1,6 @@
 #include "stats.h"
 
+//Taken directly from the libgcc implementation for __morestack_fail
 static char *
 print_int (int val, char *buf, int buflen, size_t *print_len)
 {
@@ -63,5 +64,6 @@ void printAlloc(int didAlloc) {
 
 int main(int argc, char **argv) {
   printAlloc(3);
+  printAlloc(4);
   return 0;
 }
