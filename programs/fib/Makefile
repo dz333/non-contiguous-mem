@@ -1,7 +1,8 @@
-SRC = hello.cpp
-TARGET = hello
-LL = hello.ll
-ASM = hello.S
+BASE = fib
+SRC = $(BASE).cpp
+TARGET = $(BASE)
+LL = $(BASE).ll
+ASM = $(BASE).S
 ifdef SPLIT
 SPLITARG = -fsplit-stack
 endif
