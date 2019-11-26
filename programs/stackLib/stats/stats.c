@@ -1,6 +1,9 @@
 #include "stats.h"
 
+
+static char* print_int(int val, char*buf, int buflen, size_t *print_len)__attribute__((no_split_stack, flatten));
 //Taken directly from the libgcc implementation for __morestack_fail
+
 static char *
 print_int (int val, char *buf, int buflen, size_t *print_len)
 {
@@ -37,8 +40,10 @@ print_int (int val, char *buf, int buflen, size_t *print_len)
     return buf + i;
 }
 
+void printAlloc(const size_t *didAlloc)  __attribute__ ((no_split_stack, flatten));
 
-void printAlloc(int didAlloc) {
+void printAlloc(const size_t *didAlloc) {
+  // register int didAlloc asm("r10");
   static const char msg[] = "Alloc bytes: ";
   size_t len = sizeof msg - 1;
   char buf[24];
@@ -51,19 +56,12 @@ void printAlloc(int didAlloc) {
   iov[0].iov_len = len;
   /* We can't call strerror, because it may try to translate the error
      message, and that would use too much stack space.  */
-  iov[1].iov_base = print_int (didAlloc, buf, sizeof buf, &iov[1].iov_len);
+  iov[1].iov_base = print_int (*didAlloc, buf, sizeof buf, &iov[1].iov_len);
   myvar.cp = &nl[0];
   iov[2].iov_base = myvar.p;
   iov[2].iov_len = sizeof nl - 1;
   /* FIXME: On systems without writev we need to issue three write
      calls, or punt on printing errno.  For now this is irrelevant
      since stack splitting only works on GNU/Linux anyhow.  */
-  writev (2, iov, 3);
-}
-
-
-int main(int argc, char **argv) {
-  printAlloc(3);
-  printAlloc(4);
-  return 0;
+  writev(2, iov, 3);
 }

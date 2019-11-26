@@ -1,4 +1,4 @@
-BASE = fib
+BASE = recurse
 SRC = $(BASE).cpp
 TARGET = $(BASE)
 LL = $(BASE).ll
@@ -6,6 +6,7 @@ ASM = $(BASE).S
 ifdef SPLIT
 SPLITARG = -fsplit-stack
 endif
+
 all: $(TARGET)
 
 $(LL): $(SRC)
