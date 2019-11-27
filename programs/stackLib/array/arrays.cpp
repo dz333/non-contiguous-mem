@@ -25,6 +25,10 @@ Array<T>::Array(size_t size)
   int numpages = ((size * sizeof(T)) / PAGE_SIZE) + 1;
   printf("Size of element is %lu\n", sizeof(T));
   printf("Num pages allocated is %d\n", numpages);
+  if (numpages > NUM_PTRS) {
+    printf("Cant support that many pages!!\n");
+    exit(1);
+  }
   if (numpages > 1) {
     single = false;
     for (int i = 0; i < numpages; i++) {
@@ -77,7 +81,7 @@ T* Array<T>::getAddr(int index) {
 
 int main()
 {
-  Array<int> a(2000);
+  Array<int> a(2000000);
   a.set(1800, 3);
   a.set(1801, 4);
   int x = a.get(1800);
