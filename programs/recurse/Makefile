@@ -5,8 +5,14 @@ LL = $(BASE).ll
 ASM = $(BASE).S
 ifdef SPLIT
 SPLITARG = -fsplit-stack
+else
+SPLITARG =
 endif
-
+ifdef INST
+LINK = -L../stackLib/stats -lstats
+else
+LINK =
+endif
 all: $(TARGET)
 
 $(LL): $(SRC)
@@ -16,7 +22,7 @@ $(ASM): $(LL)
 	llc $< -o $@
 
 $(TARGET): $(ASM)
-	gcc $^ $(SPLITARG) -L../stackLib/stats -lstats -o $@
+	gcc $^ $(SPLITARG) $(LINK) -o $@
 
 clean:
 	rm -f $(TARGET) $(LL) $(ASM) *~

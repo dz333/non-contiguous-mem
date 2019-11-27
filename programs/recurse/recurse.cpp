@@ -1,15 +1,15 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../stackLib/stats/stats.h"
-/*
+
 int dynamic(int x, int y) {
   int tmp[x];
   for (int i = 0; i < x; i++) {
-    tmp[i] = i * 1337 % x;
+    tmp[i] = (i * 1337) % x;
   }
   return tmp[y % x];
 }
-*/
+
 int rec(int x) {
   int tmp[1000000];
   if (x < 0) {
@@ -31,7 +31,7 @@ int rec(int x) {
 int main(int argc, char **argv) {
   int n = argc > 1 ? atol(argv[1]) : 0;
   printf("Number is: %d\n", n);
-  //  printf("Do the thing: %d\n", dynamic(100, 11));
+  printf("Do the thing: %d\n", dynamic(100000, 11));
   printf("Rec is: %d\n", rec(n));
   return 0;
 }
