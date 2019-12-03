@@ -1,5 +1,5 @@
 #include "arrays.h"
-
+#include <assert.h>
 typedef struct OptionData_ {
   float s;          // spot price
   float strike;     // strike price
@@ -16,6 +16,7 @@ typedef struct OptionData_ {
 
 int main()
 {
+  /*
   Array<int> a(1000000);
   a.set(0, 3);
   a.set(1, 4);
@@ -30,4 +31,25 @@ int main()
   printf("Output is %d\n", a.get(524288));
   a.set(999999, -3);
   printf("Output is %d\n", a.get(999999));
+  int *z = a.getAddr(999999);
+  printf("Addr for z is %p\n", z);
+  printf("Value is %d\n",*z);
+  */
+  Array<OptionData> opt(10000000);
+  OptionData zzz;
+  zzz.s = 4.22f;
+  for (int i = 0 ; i < 10000000; i++) {
+    opt.set(i, zzz);
+    assert(opt.get(i).s == zzz.s);
+    assert(opt.getAddr(i)->s == zzz.s);
+  }
+  /*
+  opt.set(9951232, zzz);
+  OptionData* x1 = opt.getAddr(9951232);
+  printf("addr is %p\n", x1);
+  OptionData y1 = opt.get(9951232);
+  opt.set(9951232, y1);
+  printf("s is %f\n", y1.s);
+  printf("s is %f\n", x1->s);
+  */
 }

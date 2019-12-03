@@ -16,6 +16,8 @@
 #define getL2Offset(i) (i % NUM_ELEMS)
 
 
+
+
 template <typename T>
 class Array
 {
@@ -35,8 +37,8 @@ public:
 template <typename T>
 Array<T>::Array(size_t size)
 {
-  num_data_pages = ((size * sizeof(T)) / PAGE_SIZE) + 1;
-  num_l1_pages = num_data_pages / PTRS_PER_PAGE + 1;
+  num_data_pages = (size / NUM_ELEMS)  + 1;
+  num_l1_pages = (num_data_pages / PTRS_PER_PAGE) + 1;
   printf("Size of element is %lu\n", sizeof(T));
   printf("Num pages allocated is %lu\n", num_data_pages);
   printf("Number of l1 pages is %lu\n", num_l1_pages);
@@ -147,5 +149,4 @@ T* Array<T>::getAddr(int index) {
     return &(entries[pageno][offset]);
   }
 }
-
 #endif
