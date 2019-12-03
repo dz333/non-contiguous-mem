@@ -3,12 +3,19 @@ SRC = $(BASE).cpp
 TARGET = $(BASE)
 OBJ = $(BASE).o
 
-all: $(TARGET)
+all: library
 
 $(TARGET): $(SRC)
-	gcc $^ -o $(TARGET)
+	g++ -O2 $^ -o $(TARGET)
 
 $(OBJ): $(SRC)
-	gcc -c -fPIC $^ -o $(OBJ)
+	g++ -O2 -c -fPIC $^ -o $(OBJ)
+
+.PHONY: library
+
+library: $(OBJ)
+	ar rcs libarrays.a $(OBJ)
+
+.PHONY: clean
 clean:
-	rm -f $(TARGET) $(OBJ) *~
+	rm -f $(TARGET) $(OBJ) libarrays.a *~
