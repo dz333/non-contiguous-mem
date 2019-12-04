@@ -29,9 +29,7 @@ private:
 public:
   Array(size_t size);
   ~Array();
-  T get(int index);
-  void set(int index, T val);
-  T* getAddr(int index);
+  T &operator[](int index);
 };
 
 template <typename T>
@@ -85,30 +83,7 @@ Array<T>::~Array() {
 }
 
 template <typename T>
-void Array<T>::set(int index, T val)
-{
-  if (single) {
-    T *entries = (T*) ptable;
-    entries[index] = val;
-  } else if (two_level) {
-    T ***entries = (T***) ptable;
-    int l1off = getL1Offset(index);
-    int pageno = getL2Index(index);
-    int offset = getL2Offset(index);
-    T **l1_page = entries[l1off];
-    T *page = l1_page[pageno];
-    page[offset] = val;
-  } else {
-    T **entries = (T**) ptable;
-    int pageno = getL2Index(index);
-    int offset = getL2Offset(index);
-    T *page = entries[pageno];
-    page[offset] = val;
-  }
-}
-
-template <typename T>
-T Array<T>::get(int index) {
+T &Array<T>::operator[](int index) {
   if (single) {
     T *entries = (T*) ptable;
     return entries[index];
@@ -126,27 +101,6 @@ T Array<T>::get(int index) {
     int offset = index % NUM_ELEMS;
     T *page = entries[pageno];
     return page[offset];
-  }
-}
-
-template <typename T>
-T* Array<T>::getAddr(int index) {
-  if (single) {
-    T *entries = (T*) ptable;
-    return &(entries[index]);
-  } else if (two_level) {
-    T ***entries = (T***) ptable;
-    int l1off = getL1Offset(index);
-    T **l1_page = entries[l1off];
-    int pageno = getL2Index(index);
-    int offset = getL2Offset(index);
-    T *page = l1_page[pageno];
-    return &(page[offset]);
-  } else {
-    T **entries = (T**) ptable;
-    int pageno = index / NUM_ELEMS;
-    int offset = index % NUM_ELEMS;
-    return &(entries[pageno][offset]);
   }
 }
 #endif

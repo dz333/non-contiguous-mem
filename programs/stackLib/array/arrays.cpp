@@ -37,19 +37,16 @@ int main()
   */
   Array<OptionData> opt(10000000);
   OptionData zzz;
-  zzz.s = 4.22f;
+  zzz.v = 4.22f;
+  OptionData clear;
+  clear.v = 0.11f;
   for (int i = 0 ; i < 10000000; i++) {
-    opt.set(i, zzz);
-    assert(opt.get(i).s == zzz.s);
-    assert(opt.getAddr(i)->s == zzz.s);
+    opt[i] = zzz;
+    assert(opt[i].v == zzz.v);
+    assert((&opt[i])->v == zzz.v);
+    opt[i] = clear;
   }
-  /*
-  opt.set(9951232, zzz);
-  OptionData* x1 = opt.getAddr(9951232);
-  printf("addr is %p\n", x1);
-  OptionData y1 = opt.get(9951232);
-  opt.set(9951232, y1);
-  printf("s is %f\n", y1.s);
-  printf("s is %f\n", x1->s);
-  */
+  printf("Float 0 is %f\n", opt[0].v);
+  printf("addr is %p\n", &opt[0]);
+
 }
