@@ -6,7 +6,7 @@ OBJ = $(BASE).o
 all: library
 
 $(TARGET): $(SRC)
-	g++ -O2 $^ -o $(TARGET)
+	g++ -O2 -g $^ -o $(TARGET)
 
 $(OBJ): $(SRC)
 	g++ -O2 -c -fPIC $^ -o $(OBJ)

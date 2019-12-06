@@ -14,28 +14,30 @@ typedef struct OptionData_ {
 } OptionData;
 
 
+Array<OptionData> *optHolder;
 int main()
 {
   /*
   Array<int> a(1000000);
-  a.set(0, 3);
-  a.set(1, 4);
-  int x = a.get(0);
+  a[0] = 3;
+  a[1] = 4;
+  int x = a[0];
   printf("Output is %d\n", x);
-  int* y = a.getAddr(0);
+  int* y = &a[0];
   printf("Output is %d\n", *y);
   printf("Next Output is %d\n", y[1]);
-  a.set(1024, 7);
-  printf("Output is %d\n", a.get(1024));
-  a.set(524288, 12);
-  printf("Output is %d\n", a.get(524288));
-  a.set(999999, -3);
-  printf("Output is %d\n", a.get(999999));
-  int *z = a.getAddr(999999);
+  a[1024] = 7;
+  printf("Output is %d\n", a[1024]);
+  a[524288] = 12;
+  printf("Output is %d\n", a[524288]);
+  a[999999] = -3;
+  printf("Output is %d\n", a[999999]);
+  int *z = &a[999999];
   printf("Addr for z is %p\n", z);
   printf("Value is %d\n",*z);
   */
-  Array<OptionData> opt(10000000);
+  optHolder = new Array<OptionData>(10000000);
+  Array<OptionData> opt = *optHolder;
   OptionData zzz;
   zzz.v = 4.22f;
   OptionData clear;
@@ -48,5 +50,9 @@ int main()
   }
   printf("Float 0 is %f\n", opt[0].v);
   printf("addr is %p\n", &opt[0]);
+ 
+  Array<int> *two = new Array<int>(1000000);
+  (*two)[0] = 4;
+  delete two;
 
 }

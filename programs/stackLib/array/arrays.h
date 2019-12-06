@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE (1000*1000)
 #define PTRS_PER_PAGE (PAGE_SIZE / sizeof(void*))
 #define MAX_PAGES (PTRS_PER_PAGE * PTRS_PER_PAGE)
 #define NUM_ELEMS (PAGE_SIZE / sizeof(T))
@@ -49,7 +49,8 @@ Array<T>::Array(size_t size)
       for (int i = 0; i < num_l1_pages; i++) {
 	void* l1_page = malloc(PAGE_SIZE);
 	ptable[i] = l1_page;
-	for (int j = 0; j < PTRS_PER_PAGE; j++) {
+	int l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
+	for (int j = 0; j < l2pages; j++) {
 	  void **l1_page_cast = (void **)l1_page;
 	  l1_page_cast[j] = malloc(PAGE_SIZE);
 	}
@@ -69,7 +70,8 @@ Array<T>::~Array() {
     if (two_level) {
       for (int i = 0; i < num_l1_pages; i++) {
 	void **l1_page = (void**) ptable[i];
-	for (int j = 0; j < PTRS_PER_PAGE; j++) {
+	int l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
+	for (int j = 0; j < l2pages; j++) {
 	  free(l1_page[j]);
 	}
 	free(l1_page);
