@@ -1,20 +1,12 @@
 #include "arrays.h"
 #include <assert.h>
-typedef struct OptionData_ {
+typedef struct TestStruct_ {
   float s;          // spot price
-  float strike;     // strike price
-  float r;          // risk-free interest rate
-  float divq;       // dividend rate
-  float v;          // volatility
-  float t;          // time to maturity or option expiration in years
-  //     (1yr = 1.0, 6mos = 0.5, 3mos = 0.25, ..., etc)
-  char OptionType;   // Option type.  "P"=PUT, "C"=CALL
-  float divs;       // dividend vals (not used in this test)
-  float DGrefval;   // DerivaGem Reference Value
-} OptionData;
+  float v;
+} TestStruct;
 
 
-Array<OptionData> *optHolder;
+Array<TestStruct> *optHolder;
 int main()
 {
   /*
@@ -36,11 +28,11 @@ int main()
   printf("Addr for z is %p\n", z);
   printf("Value is %d\n",*z);
   */
-  optHolder = new Array<OptionData>(10000000);
-  Array<OptionData> opt = *optHolder;
-  OptionData zzz;
+  optHolder = new Array<TestStruct>(10000000);
+  Array<TestStruct> opt = *optHolder;
+  TestStruct zzz;
   zzz.v = 4.22f;
-  OptionData clear;
+  TestStruct clear;
   clear.v = 0.11f;
   for (int i = 0 ; i < 10000000; i++) {
     opt[i] = zzz;
