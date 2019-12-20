@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define PAGE_SIZE (1000*1000)
+#define PAGE_SIZE (1024*4)
 #define PTRS_PER_PAGE (PAGE_SIZE / sizeof(void*))
 #define MAX_PAGES (PTRS_PER_PAGE * PTRS_PER_PAGE)
 #define NUM_ELEMS (PAGE_SIZE / sizeof(T))
@@ -11,12 +11,18 @@
 #define single (num_data_pages == 1)
 #define two_level (num_l1_pages > 1)
 
+//#define single (0)
+//#define two_level (1)
+
 #define getL1Offset(i) (i / ELEMS_PER_L2)
 #define getL2Index(i)  ((i / NUM_ELEMS) % PTRS_PER_PAGE)
 #define getL2Offset(i) (i % NUM_ELEMS)
 
-
-
+template<class T>
+struct MemRegion {
+  T* minValue;
+  T* maxValue;
+};
 
 template <typename T>
 class Array
@@ -30,6 +36,7 @@ public:
   Array(size_t size);
   ~Array();
   T &operator[](int index);
+  MemRegion<T> getRegion(int index);
 };
 
 template <typename T>
@@ -37,9 +44,9 @@ Array<T>::Array(size_t size)
 {
   num_data_pages = (size / NUM_ELEMS)  + 1;
   num_l1_pages = (num_data_pages / PTRS_PER_PAGE) + 1;
-  printf("Size of element is %lu\n", sizeof(T));
-  printf("Num pages allocated is %lu\n", num_data_pages);
-  printf("Number of l1 pages is %lu\n", num_l1_pages);
+  //  printf("Size of element is %lu\n", sizeof(T));
+  // printf("Num pages allocated is %lu\n", num_data_pages);
+  // printf("Number of l1 pages is %lu\n", num_l1_pages);
   if (num_data_pages > MAX_PAGES) {
     printf("Cant support that many pages!!\n");
     exit(1);
@@ -104,5 +111,32 @@ T &Array<T>::operator[](int index) {
     T *page = entries[pageno];
     return page[offset];
   }
+}
+
+template <typename T>
+MemRegion<T> Array<T>::getRegion(int index) {
+  MemRegion<T> result;
+  if (single) {
+    T *entries = (T*) ptable;
+    result.minValue = &(entries[index]);
+    result.maxValue = &(entries[NUM_ELEMS-1]);
+  } else if (two_level) {
+    T ***entries = (T***) ptable;
+    int l1off = getL1Offset(index);
+    T **l1_page = entries[l1off];
+    int pageno = getL2Index(index);
+    int offset = getL2Offset(index);
+    T *page = l1_page[pageno];
+    result.minValue = &(page[offset]);
+    result.maxValue = &(page[NUM_ELEMS-1]);
+  } else {
+    T **entries = (T**) ptable;
+    int pageno = index / NUM_ELEMS;
+    int offset = index % NUM_ELEMS;
+    T *page = entries[pageno];
+    result.minValue = &(page[pageno]);
+    result.maxValue = &(page[NUM_ELEMS-1]);
+  }
+  return result;
 }
 #endif

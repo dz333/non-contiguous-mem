@@ -42,7 +42,17 @@ int main()
   }
   printf("Float 0 is %f\n", opt[0].v);
   printf("addr is %p\n", &opt[0]);
- 
+  MemRegion<TestStruct> teststruct = opt.getRegion(0);
+  printf("Float 0 is %f\n", teststruct.minValue->v);
+  printf("Diff between min and max is %d\n", teststruct.maxValue - teststruct.minValue);
+  TestStruct* ptr = teststruct.minValue;
+  int z = 0;
+  while (ptr <= teststruct.maxValue) {
+    assert(ptr->v == clear.v);
+    z++;
+    ptr++;
+  }
+  
   Array<int> *two = new Array<int>(1000000);
   (*two)[0] = 4;
   delete two;
