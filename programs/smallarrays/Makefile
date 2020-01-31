@@ -15,7 +15,7 @@ LINK = -L../stackLib/stats -lstats
 else
 LINK =
 endif
-all: $(TARGET) $(ARRAY) scan scan_array
+all: $(TARGET) $(ARRAY) scan scan_array scan_opt
 
 $(LL): $(SRC)
 	clang++ -O2 -g $(SPLITARG) $^ -S -emit-llvm -o $@
@@ -34,5 +34,8 @@ scan: $(SRC)
 
 scan_array: $(SRC)
 	g++ -O2 -g -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
+
+scan_opt: $(SRC)
+	g++ -O2 -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
 clean:
-	rm -f $(TARGET) $(ARRAY) scan scan_array $(LL) $(ASM) *~
+	rm -f $(TARGET) $(ARRAY) scan scan_array scan_opt $(LL) $(ASM) *~
