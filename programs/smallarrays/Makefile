@@ -1,14 +1,10 @@
-BASE = main
-ARRAY = main_array
-SRC = $(BASE).cpp
+BASE = chase
+ARRAY = chase_array
+SRC = main.cpp
 TARGET = $(BASE)
-LL = $(BASE).ll
-ASM = $(BASE).S
-ifdef ARRAYS
-ARARG = -D ARRAYOBJ
-else
-ARARG = 
-endif
+LL = main.ll
+ASM = main.S
+
 ifdef SPLIT
 SPLITARG = -fsplit-stack
 else
@@ -19,7 +15,7 @@ LINK = -L../stackLib/stats -lstats
 else
 LINK =
 endif
-all: $(TARGET) $(ARRAY)
+all: $(TARGET) $(ARRAY) scan scan_array
 
 $(LL): $(SRC)
 	clang++ -O2 -g $(SPLITARG) $^ -S -emit-llvm -o $@
@@ -28,11 +24,15 @@ $(ASM): $(LL)
 	llc $< -o $@
 
 $(ARRAY): $(SRC)
-	g++ -O2 -g $(SPLITARG) -D ARRAYOBJ $^ $(LINK) -o $@
+	g++ -O2 -g -D ARRAYOBJ $^ $(LINK) -o $@
 
+$(TARGET): $(SRC)
+	g++ -O2 -g $^ $(LINK) -o $@
 
-$(TARGET): $(ASM)
-	gcc $^ -g $(SPLITARG) $(LINK) -o $@
+scan: $(SRC)
+	g++ -O2 -g -D SCAN $^ $(LINK) -o $@
 
+scan_array: $(SRC)
+	g++ -O2 -g -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
 clean:
-	rm -f $(TARGET) $(ARRAY) $(LL) $(ASM) *~
+	rm -f $(TARGET) $(ARRAY) scan scan_array $(LL) $(ASM) *~
