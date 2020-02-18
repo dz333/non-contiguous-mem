@@ -5,7 +5,7 @@ TARGET = $(BASE)
 LL = main.ll
 ASM = main.S
 
-GCCFLAGS=-O0 -Wall
+GCCFLAGS=-O2 -Wall
 
 ifdef SPLIT
 SPLITARG = -fsplit-stack

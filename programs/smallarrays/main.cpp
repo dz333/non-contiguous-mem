@@ -29,14 +29,13 @@ int doScan(int* vals, size_t size, unsigned long iterations) {
     vals[i] = (i + 1) * 1734;
   }
   int sum = 0;
-  int *cursor = vals;
-  int *end = cursor + size;
   for (unsigned long i = 0; i < iterations; i++) {
-    if (cursor == end) {
-      cursor = vals;
+    int *cursor = vals;
+    int *end = cursor + size;
+    while (cursor != end) {
+      sum += *cursor;
+      cursor++;      
     }
-    sum += *cursor;
-    cursor++;
   }
   return sum;
 }
@@ -70,13 +69,15 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
      }
   }
   int sum = 0;
-  MemRegion<int> r = vals.getRegion(0);
   for (unsigned long i = 0; i < iterations; i++) {
-    if(r.minValue > r.maxValue) {
-      r = vals.getRegion(i % size);
+    for (size_t j = 0; j < size;) {
+      MemRegion<int> r = vals.getRegion(j);
+      j += (r.maxValue - r.minValue) + 1;
+      while(r.minValue <= r.maxValue) {
+	sum += *(r.minValue);
+	r.minValue++;
+      }
     }
-    sum += *(r.minValue);
-    r.minValue++;
   }
   return sum;
 }
