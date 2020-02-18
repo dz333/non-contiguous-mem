@@ -5,6 +5,8 @@ TARGET = $(BASE)
 LL = main.ll
 ASM = main.S
 
+GCCFLAGS=-O0 -Wall
+
 ifdef SPLIT
 SPLITARG = -fsplit-stack
 else
@@ -24,18 +26,31 @@ $(ASM): $(LL)
 	llc $< -o $@
 
 $(ARRAY): $(SRC)
-	g++ -O2 -g -D ARRAYOBJ $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -g -D ARRAYOBJ $^ $(LINK) -o $@
 
 $(TARGET): $(SRC)
-	g++ -O2 -g $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -g $^ $(LINK) -o $@
 
 scan: $(SRC)
-	g++ -O2 -g -D SCAN $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -g -D SCAN $^ $(LINK) -o $@
+
+scanll: $(SRC)
+	clang++ -O2 -g -D SCAN $^ $(LINK) -o $@
+
+scan.S: $(SRC)
+	g++ $(GCCFLAGS) -g -S -D SCAN $^ $(LINK) -o $@
 
 scan_array: $(SRC)
-	g++ -O2 -g -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
 
 scan_opt: $(SRC)
-	g++ -O2 -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+
+scan_optll: $(SRC)
+	clang++ -O2 -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+
+scan_opt.S: $(SRC)
+	g++ $(GCCFLAGS) -g -S -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+
 clean:
 	rm -f $(TARGET) $(ARRAY) scan scan_array scan_opt $(LL) $(ASM) *~
