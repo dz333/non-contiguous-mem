@@ -24,39 +24,20 @@ int doWork(Array<int> vals, size_t size, unsigned long iterations) {
 
 #ifndef ARRAYOBJ
 int doScan(int* vals, size_t size, unsigned long iterations) {
-  printf("Doing Baseline Scan\n");
-  for (unsigned long i = 0; i < size; i++) {
-    vals[i] = (i + 1) * 1734;
-  }
-  int sum = 0;
-  for (unsigned long i = 0; i < iterations; i++) {
-    int *cursor = vals;
-    int *end = cursor + size;
-    while (cursor != end) {
-      sum += *cursor;
-      cursor++;      
-    }
-  }
-  return sum;
-}
 #else
 int doScan(Array<int> vals, size_t size, unsigned long iterations) {
-  printf("Doing Array Scan\n");
+#endif
   for (unsigned long i = 0; i < size; i++) {
     vals[i] = (i + 1) * 1734;
   }
   int sum = 0;
-  size_t idx = 0;
   for (unsigned long i = 0; i < iterations; i++) {
-    if (idx == size) {
-      idx = 0;
+    for (size_t idx = 0; idx < size; idx++) {
+      sum += vals[idx];
     }
-    sum += vals[idx];
-    idx++;
   }
   return sum;
 }
-#endif
  
 int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
   printf("Doing Opt Array Scan\n");
