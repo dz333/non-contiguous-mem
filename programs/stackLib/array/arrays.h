@@ -46,6 +46,7 @@ public:
 template <typename T>
 Array<T>::Array(size_t size)
 {
+  num_elems = size;
   num_data_pages = (size / NUM_ELEMS) + 1;
   num_l1_pages = (num_data_pages / PTRS_PER_PAGE) + 1;
   //  printf("Size of element is %lu\n", sizeof(T));
@@ -197,8 +198,9 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
   MemRegion<T> result;
   if (single) {
     T *entries = (T*) ptable;
+    size_t end = NUM_ELEMS > num_elems ? num_elems - 1 : NUM_ELEMS - 1;
     result.minValue = &(entries[index]);
-    result.maxValue = &(entries[NUM_ELEMS-1]);
+    result.maxValue = &(entries[end]);
   } else if (two_level) {
     T ***entries = (T***) ptable;
     size_t l1off = getL1Offset(index);
@@ -206,15 +208,17 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t pageno = getL2Index(index);
     size_t offset = getL2Offset(index);
     T *page = l1_page[pageno];
+    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
-    result.maxValue = &(page[NUM_ELEMS-1]);
+    result.maxValue = &(page[end]);
   } else {
     T **entries = (T**) ptable;
     size_t pageno = index / NUM_ELEMS;
     size_t offset = index % NUM_ELEMS;
     T *page = entries[pageno];
+    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
-    result.maxValue = &(page[NUM_ELEMS-1]);
+    result.maxValue = &(page[end]);
   }
   return result;
 }

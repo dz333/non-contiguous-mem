@@ -1,6 +1,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../stackLib/array/arrays.h"
+#include <random>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #ifdef ARRAYOBJ
 Array<int> *arr;
@@ -15,8 +18,11 @@ int doWork(Array<int> vals, size_t size, unsigned long iterations) {
     vals[i] = (i + 1) * 1734;
   }
   int sum = 0;
+  std::random_device rd;
+  std::default_random_engine e1(rd());
+  std::uniform_int_distribution<size_t> uniform_dist(0, size - 1);
   for (unsigned long i = 0; i < iterations; i++) {
-    sum += vals[rand() % size];
+    sum += vals[uniform_dist(e1)];
   }
   return sum;
 }
@@ -38,7 +44,7 @@ int doScan(Array<int> vals, size_t size, unsigned long iterations) {
   }
   return sum;
 }
- 
+  
 int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
   printf("Doing Opt Array Scan\n");
    for (unsigned long i = 0; i < size;) {
@@ -62,7 +68,7 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
   }
   return sum;
 }
-
+ 
 #ifndef SCAN
   #define FUNC doWork
 #else
@@ -78,10 +84,10 @@ int main(int argc, char **argv) {
   printf("Size of array is %lu\nNumer of Accesses is %lu\n", n, m);
 #ifndef ARRAYOBJ
   int* x = (int*) malloc(n * sizeof(int));
-  int result = FUNC(x, n, m);
+  int result = FUNC((int*)x, n, m);
   printf("Result is %d\n", result);
   free(x);
-  return  result;
+  return result;
 #else
   arr = new Array<int>(n);
   int result = FUNC(*arr, n, m);
@@ -89,4 +95,3 @@ int main(int argc, char **argv) {
   return result;
 #endif
 }
-
