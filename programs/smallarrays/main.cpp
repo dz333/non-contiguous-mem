@@ -9,6 +9,26 @@
 Array<int> *arr;
 #endif
 
+#define SYS_PAGE_SIZE (1 << 12)
+#define PAGE_INT_OFFSET (SYS_PAGE_SIZE / sizeof(int))
+
+#ifndef ARRAYOBJ
+int doStridedAccess(int* vals, size_t size, unsigned long iterations) {
+#else
+int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
+#endif
+  // for (unsigned long i = 0; i < size; i++) {
+  //   vals[i] = (i+1) * 1734;
+  // }
+  size_t addr = 0;
+  int sum = 0;
+  for (unsigned long j = 0; j < iterations; j++) {
+    sum += vals[addr];
+    addr = (addr + PAGE_INT_OFFSET) % size;
+  }
+  return sum;
+}
+
 #ifndef ARRAYOBJ
 int doWork(int* vals, size_t size, unsigned long iterations) {
 #else
@@ -70,7 +90,11 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
 }
  
 #ifndef SCAN
+ #ifdef STRIDE
+  #define FUNC doStridedAccess
+ #else
   #define FUNC doWork
+ #endif
 #else
   #ifdef OPT
     #define FUNC doOptScan

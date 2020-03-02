@@ -34,9 +34,6 @@ $(TARGET): $(SRC)
 scan: $(SRC)
 	g++ $(GCCFLAGS) -g -D SCAN $^ $(LINK) -o $@
 
-scanll: $(SRC)
-	clang++ -O2 -g -D SCAN $^ $(LINK) -o $@
-
 scan.S: $(SRC)
 	g++ $(GCCFLAGS) -g -S -D SCAN $^ $(LINK) -o $@
 
@@ -46,11 +43,13 @@ scan_array: $(SRC)
 scan_opt: $(SRC)
 	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
 
-scan_optll: $(SRC)
-	clang++ -O2 -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
-
 scan_opt.S: $(SRC)
 	g++ $(GCCFLAGS) -g -S -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
 
+strided: $(SRC)
+	g++ $(GCCFLAGS) -g -D STRIDE $^ $(LINK) -o $@
+
+strided_opt: $(SRC)
+	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
 clean:
-	rm -f chase chase_array scan scan_array scan_opt $(LL) $(ASM) *~
+	rm -f chase chase_array scan scan_array scan_opt strided $(LL) $(ASM) *~
