@@ -3,12 +3,13 @@
 RUNS=1
 ACCESSES=10000000000
 RANDAC=$ACCESSES
+STAC=$ACCESSES
 SMALL=1000
 MID=1000000
 LARGE=1000000000
 HUGE=3000000000
 
-while getopts smlhrp opt; do
+while getopts smlhrpt opt; do
     case $opt in
 	s) DOSMALL="true"
 	   ;;
@@ -21,6 +22,8 @@ while getopts smlhrp opt; do
 	r) DORAND="true"
 	   ;;
 	p) DOPASS="true"
+	   ;;
+	t) DOSTRIDED="true"
 	   ;;
     esac
 done
@@ -61,6 +64,16 @@ then
 	echo "Using custom Arrays"
 	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./chase_array $SMALL $RANDAC
     fi
+    if [ ! -z "$DOSTRIDED" ]
+    then
+	echo "Running Strided Scan With Small Arrays (n=1000)"
+	
+	echo "Using default malloc"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided $SMALL $STAC
+	
+	echo "Using custom Arrays"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided_array $SMALL $STAC
+    fi
 fi
 
 if [ ! -z "$DOMID" ]
@@ -87,6 +100,16 @@ then
 	
 	echo "Using custom Arrays"
 	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./chase_array $MID $RANDAC
+    fi
+    if [ ! -z "$DOSTRIDED" ]
+    then
+	echo "Running Strided Scan With Medium Arrays (n=1000000)"
+	
+	echo "Using default malloc"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided $MID $STAC
+	
+	echo "Using custom Arrays"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided_array $MID $STAC
     fi
 fi
 
@@ -129,6 +152,16 @@ then
 	echo "Using custom Arrays"
 	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./chase_array $LARGE $RANDAC
     fi
+        if [ ! -z "$DOSTRIDED" ]
+    then
+	echo "Running Strided Scan With Large Arrays (n=1000000000)"
+	
+	echo "Using default malloc"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided $LARGE $STAC
+	
+	echo "Using custom Arrays"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided_array $LARGE $STAC
+    fi
 fi
 
 if [ ! -z "$DOHUGE" ]
@@ -157,7 +190,7 @@ then
     fi
     if [ ! -z "$DORAND" ]
     then	
-	echo "Running Random Access With Large Arrays (n=1000000000)"
+	echo "Running Random Access With Large Arrays (n=3000000000)"
 	
 	echo "Init time for chase default"
 	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./chase $HUGE 0
@@ -170,5 +203,15 @@ then
 	
 	echo "Using custom Arrays"
 	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./chase_array $HUGE $RANDAC
+    fi
+    if [ ! -z "$DOSTRIDED" ]
+    then
+	echo "Running Strided Scan With HUGE Arrays (n=3000000000)"
+	
+	echo "Using default malloc"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided $HUGE $STAC
+	
+	echo "Using custom Arrays"
+	cset shield --exec -- perf stat -r "$RUNS" -e cycles -e instructions -e L1-dcache-load-misses -e L1-dcache-loads -e dTLB-load-misses -e dTLB-loads  ./strided_array $HUGE $STAC
     fi
 fi

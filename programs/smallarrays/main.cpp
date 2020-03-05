@@ -4,30 +4,35 @@
 #include <random>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <math.h>
 
 #ifdef ARRAYOBJ
 Array<int> *arr;
 #endif
 
 #define SYS_PAGE_SIZE (1 << 12)
-#define PAGE_INT_OFFSET (SYS_PAGE_SIZE / sizeof(int))
+#define PAGE_INT_OFFSET (SYS_PAGE_SIZE >> 2)
 
 #ifndef ARRAYOBJ
 int doStridedAccess(int* vals, size_t size, unsigned long iterations) {
 #else
 int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
 #endif
-  // for (unsigned long i = 0; i < size; i++) {
-  //   vals[i] = (i+1) * 1734;
-  // }
-  size_t addr = 0;
+  for (unsigned long i = 0; i < size; i++) {
+    vals[i] = (i+1) * 1734;
+  }
   int sum = 0;
-  for (unsigned long j = 0; j < iterations; j++) {
-    sum += vals[addr];
-    addr = (addr + PAGE_INT_OFFSET) % size;
+  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
+  unsigned long total = iterations / innerloop;
+  printf("Total accesses is %lu\n", total);
+  for (unsigned long j = 0; j < total; j++) {
+    for (size_t idx = 0; idx < size; idx += PAGE_INT_OFFSET) {
+      sum += vals[idx];
+    }
   }
   return sum;
 }
+
 
 #ifndef ARRAYOBJ
 int doWork(int* vals, size_t size, unsigned long iterations) {

@@ -17,7 +17,7 @@ LINK = -L../stackLib/stats -lstats
 else
 LINK =
 endif
-all: chase chase_array scan scan_array scan_opt
+all: chase chase_array scan scan_array scan_opt strided strided_array
 
 $(LL): $(SRC)
 	clang++ -O2 -g $(SPLITARG) $^ -S -emit-llvm -o $@
@@ -49,7 +49,7 @@ scan_opt.S: $(SRC)
 strided: $(SRC)
 	g++ $(GCCFLAGS) -g -D STRIDE $^ $(LINK) -o $@
 
-strided_opt: $(SRC)
+strided_array: $(SRC)
 	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
 clean:
-	rm -f chase chase_array scan scan_array scan_opt strided $(LL) $(ASM) *~
+	rm -f chase chase_array scan scan_array scan_opt strided strided_array $(LL) $(ASM) *~
