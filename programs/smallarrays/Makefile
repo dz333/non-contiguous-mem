@@ -7,6 +7,7 @@ ASM = main.S
 
 GCCFLAGS=-std=c++11 -O2 -Wall
 
+
 ifdef SPLIT
 SPLITARG = -fsplit-stack
 else
@@ -17,39 +18,53 @@ LINK = -L../stackLib/stats -lstats
 else
 LINK =
 endif
+
 all: chase chase_array scan scan_array scan_opt strided strided_array
 
+array: chase_array scan_array scan_opt strided_array
+
+base: chase scan strided
 $(LL): $(SRC)
-	clang++ -O2 -g $(SPLITARG) $^ -S -emit-llvm -o $@
+	clang++ -O2 $(SPLITARG) $^ -S -emit-llvm -o $@
 
 $(ASM): $(LL)
 	llc $< -o $@
 
 $(ARRAY): $(SRC)
-	g++ $(GCCFLAGS) -g -D ARRAYOBJ $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D ARRAYOBJ $^ $(LINK) -o $@
 
 $(TARGET): $(SRC)
-	g++ $(GCCFLAGS) -g $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) $^ $(LINK) -o $@
 
 scan: $(SRC)
-	g++ $(GCCFLAGS) -g -D SCAN $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D SCAN $^ $(LINK) -o $@
 
 scan.S: $(SRC)
-	g++ $(GCCFLAGS) -g -S -D SCAN $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -S -D SCAN $^ $(LINK) -o $@
 
 scan_array: $(SRC)
-	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
+
+scan_array.S: $(SRC)
+	g++ $(GCCFLAGS) -S -D ARRAYOBJ -D SCAN $^ $(LINK) -o $@
 
 scan_opt: $(SRC)
-	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
 
 scan_opt.S: $(SRC)
-	g++ $(GCCFLAGS) -g -S -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -S -D ARRAYOBJ -D SCAN -D OPT $^ $(LINK) -o $@
 
 strided: $(SRC)
-	g++ $(GCCFLAGS) -g -D STRIDE $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D STRIDE $^ $(LINK) -o $@
+
+strided.S: $(SRC)
+	g++ $(GCCFLAGS) -S -D STRIDE $^ $(LINK) -o $@
 
 strided_array: $(SRC)
-	g++ $(GCCFLAGS) -g -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
+	g++ $(GCCFLAGS) -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
+
+strided_array.S: $(SRC)
+	g++ $(GCCFLAGS) -S -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
+
 clean:
 	rm -f chase chase_array scan scan_array scan_opt strided strided_array $(LL) $(ASM) *~

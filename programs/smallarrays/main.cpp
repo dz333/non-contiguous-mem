@@ -6,6 +6,12 @@
 #include <unistd.h>
 #include <math.h>
 
+#ifdef DEBUG
+#define DPRINT(x,y) printf(x,y);
+#else
+#define DPRINT(x,y)
+#endif
+
 #ifdef ARRAYOBJ
 Array<int> *arr;
 #endif
@@ -21,10 +27,9 @@ int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
   for (unsigned long i = 0; i < size; i++) {
     vals[i] = (i+1) * 1734;
   }
-  int sum = 0;
+  unsigned long sum = 0;
   unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
   unsigned long total = iterations / innerloop;
-  printf("Total accesses is %lu\n", total);
   for (unsigned long j = 0; j < total; j++) {
     for (size_t idx = 0; idx < size; idx += PAGE_INT_OFFSET) {
       sum += vals[idx];
@@ -71,7 +76,6 @@ int doScan(Array<int> vals, size_t size, unsigned long iterations) {
 }
   
 int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
-  printf("Doing Opt Array Scan\n");
    for (unsigned long i = 0; i < size;) {
      MemRegion<int> r = vals.getRegion(i);
      while (r.minValue <= r.maxValue) {
@@ -109,18 +113,21 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
 #endif
 int main(int argc, char **argv) {
   unsigned long n = argc > 1 ? atol(argv[1]) : 0;
-  unsigned long m = argc > 2 ? atol(argv[2]) : 1000000;
-  printf("Size of array is %lu\nNumer of Accesses is %lu\n", n, m);
+  n = 1l << n;
+  unsigned long m = argc > 2 ? atol(argv[2]) : 20;
+  m = 1l << m;
+  DPRINT("Size of array is %lu\n",n);
+  DPRINT("Numer of Accessis is %lu\n",m);
 #ifndef ARRAYOBJ
   int* x = (int*) malloc(n * sizeof(int));
   int result = FUNC((int*)x, n, m);
-  printf("Result is %d\n", result);
+  DPRINT("Result is %d\n", result);
   free(x);
   return result;
 #else
   arr = new Array<int>(n);
   int result = FUNC(*arr, n, m);
-  printf("Result is %d\n", result);
+  DPRINT("Result is %d\n", result);
   return result;
 #endif
 }

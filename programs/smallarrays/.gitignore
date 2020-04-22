@@ -3,3 +3,5 @@ chase_array
 scan
 scan_array
 scan_opt
+strided
+strided_array
