@@ -93,4 +93,5 @@ int main()
   swap(y, test);
   printf("Val is %d\n", *y);
   printf("Val is %d\n", y[1]);
+  delete two;
 }
