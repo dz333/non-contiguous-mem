@@ -30,7 +30,6 @@ class Array
 {
 private:
   void* ptable[PTRS_PER_PAGE];
-  size_t _capacity;
   size_t num_elems;
   size_t num_l1_pages;
   size_t num_data_pages;
@@ -44,18 +43,12 @@ public:
   const inline T &operator[](size_t index) const ;
   MemRegion<T> getRegion(size_t index);
   MemRegion<T> getEndRegion(size_t index);
-  bool empty() { return num_elems == 0; }
-  void clear() { num_elems = 0; }
-  size_t capacity() { return _capacity; }
-  size_t size() { return num_elems; }
-
   //  void resize(size_t size);
 };
 
 template <typename T>
 Array<T>::Array(size_t size)
 {
-  _capacity = num_data_pages * NUM_ELEMS;
   num_elems = size;
   num_data_pages = (size / NUM_ELEMS) + 1;
   num_l1_pages = (num_data_pages / PTRS_PER_PAGE) + 1;
@@ -228,7 +221,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
   MemRegion<T> result;
   if (single) {
     T *entries = (T*) ptable;
-    size_t end = NUM_ELEMS > _capacity ? _capacity - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS > num_elems ? num_elems - 1 : NUM_ELEMS - 1;
     result.minValue = &(entries[index]);
     result.maxValue = &(entries[end]);
   } else if (two_level) {
@@ -238,7 +231,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t pageno = getL2Index(index);
     size_t offset = getL2Offset(index);
     T *page = l1_page[pageno];
-    size_t end = NUM_ELEMS + (index - offset) > _capacity ? _capacity - index + offset - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
   } else {
@@ -246,7 +239,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t pageno = index / NUM_ELEMS;
     size_t offset = index % NUM_ELEMS;
     T *page = entries[pageno];
-    size_t end = NUM_ELEMS + (index - offset) > _capacity ? _capacity - index + offset - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
   }
@@ -373,6 +366,5 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
     //invariant -> window.minValue <= cursor = &(_array[index]) <= window.maxValue
     MemRegion<V> _window;
     V* _cursor;
-
 };
 #endif
