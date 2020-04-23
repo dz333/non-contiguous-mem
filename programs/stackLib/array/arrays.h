@@ -41,6 +41,7 @@ public:
   Array(size_t size);
   ~Array();
   inline T &operator[](size_t index);
+  const inline T &operator[](size_t index) const ;
   MemRegion<T> getRegion(size_t index);
   MemRegion<T> getEndRegion(size_t index);
   bool empty() { return num_elems == 0; }
@@ -157,6 +158,27 @@ inline T &Array<T>::operator[](size_t index) {
 }
 
 template <typename T>
+const inline T &Array<T>::operator[](size_t index) const {
+  if (single) {
+    T *entries = (T*) ptable;
+    return entries[index];
+  } else if (two_level) {
+    T ***entries = (T***) ptable;
+    size_t l1off = getL1Offset(index);
+    T **l1_page = entries[l1off];
+    size_t pageno = getL2Index(index);
+    size_t offset = getL2Offset(index);
+    T *page = l1_page[pageno];
+    return page[offset];
+  } else {
+    T **entries = (T**) ptable;
+    size_t pageno = index / NUM_ELEMS;
+    size_t offset = index % NUM_ELEMS;
+    T *page = entries[pageno];
+    return page[offset];
+  }
+}
+template <typename T>
 void arrayCopy(Array<T>* destptr, size_t deststart, Array<T>* srcptr, size_t srcstart, size_t count) {
   size_t copied = 0;
   while(copied < count) {
@@ -264,15 +286,22 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
     using difference_type = typename std::iterator<std::random_access_iterator_tag, Array<V>>::difference_type;
     //Constructors
     ArrayIter() : _array(nullptr), _index(0), _cursor(nullptr), _window({.minValue = nullptr, .maxValue = nullptr}) {};
-    ArrayIter(Array<V> &arr) : _array(arr), _window(arr.getRegion(0)), _cursor(_window.minValue) {};
+    ArrayIter(Array<V> *arr) : _array(arr), _index(0), _window(arr->getRegion(0)), _cursor(_window.minValue) {};
     ArrayIter(const ArrayIter &rhs) : _array(rhs._array), _cursor(rhs._cursor), _window(rhs._window), _index(rhs._index) {};
+    inline ArrayIter& operator=(const ArrayIter &rhs) {
+      _array = rhs._array;
+      _index = rhs._index;
+      _cursor = rhs._cursor;
+      _window = rhs._window;
+      return *this;
+    }
     //Accessors
     inline V& operator*() const { return *(_cursor); }
     inline V* operator->() const {return _cursor; }
     //TODO optimize if idx + _index is inside the current cursor
-    inline V& operator[](difference_type idx) {
+    inline V& operator[](difference_type idx) const {
       long offset = ((long) _index) + idx;
-      return _array[(size_t) offset];
+      return (*_array)[(size_t) offset];
     }
     //Decrement/Increment
     inline ArrayIter& operator++() {
@@ -280,7 +309,7 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
       if (_cursor < _window.maxValue) {
         _cursor++;
       } else {
-        MemRegion<V> tmp = _array.getRegion(_index);
+        MemRegion<V> tmp = _array->getRegion(_index);
         _window.minValue = tmp.minValue;
         _window.maxValue = tmp.maxValue;
         _cursor = _window.minValue;
@@ -292,15 +321,54 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
       if (_cursor > _window.minValue) {
         _cursor--;
       } else {
-        MemRegion<V> tmp = _array.getEndRegion(_index);
+        MemRegion<V> tmp = _array->getEndRegion(_index);
         _window.minValue = tmp.minValue;
         _window.maxValue = tmp.maxValue;
         _cursor = _window.maxValue;
       }
       return *this;
     };
+    inline ArrayIter& operator+=(difference_type rhs) {
+      _index += rhs;
+      _cursor += rhs;
+      if (_cursor > _window.maxValue || _cursor < _window.minValue) {
+        MemRegion<V> tmp = _array->getRegion(_index);
+        _window.minValue = tmp.minValue;
+        _window.maxValue = tmp.maxValue;
+        _cursor = _window.minValue;
+      }
+      return *this;
+    }
+    inline ArrayIter& operator-=(difference_type rhs) {
+      _index -= rhs;
+      _cursor -= rhs;
+      if (_cursor > _window.maxValue || _cursor < _window.minValue) {
+        MemRegion<V> tmp = _array->getEndRegion(_index);
+        _window.minValue = tmp.minValue;
+        _window.maxValue = tmp.maxValue;
+        _cursor = _window.maxValue;
+      }
+      return *this;
+    }
+    inline ArrayIter operator+(difference_type rhs) const {
+      ArrayIter tmp(*this);
+      tmp += rhs;
+      return tmp;
+    }
+    inline ArrayIter operator-(difference_type rhs) const {
+      ArrayIter tmp(*this);
+      tmp -= rhs;
+      return tmp;
+    }
+    //Tests
+    inline bool operator==(const ArrayIter& rhs) const {return _cursor == rhs._cursor;}
+    inline bool operator!=(const ArrayIter& rhs) const {return _cursor != rhs._cursor;}
+    inline bool operator>(const ArrayIter& rhs) const {return _cursor > rhs._cursor;}
+    inline bool operator<(const ArrayIter& rhs) const {return _cursor < rhs._cursor;}
+    inline bool operator>=(const ArrayIter& rhs) const {return _cursor >= rhs._cursor;}
+    inline bool operator<=(const ArrayIter& rhs) const {return _cursor <= rhs._cursor;}
   private:
-    Array<V> _array;
+    Array<V> *_array;
     size_t _index;
     //invariant -> window.minValue <= cursor = &(_array[index]) <= window.maxValue
     MemRegion<V> _window;
