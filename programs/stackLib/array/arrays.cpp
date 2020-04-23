@@ -58,5 +58,7 @@ int main()
   (*two)[1] = -1;
   ArrayIter<int>* x = new ArrayIter<int>(*two);
   printf("Val is %d\n", *(*x));
+  printf("Val is %d\n", (*x)[1]);
+   printf("Val is %d\n", (*x)[-1]);
   delete two;
 }
