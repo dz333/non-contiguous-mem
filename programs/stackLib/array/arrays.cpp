@@ -55,10 +55,14 @@ int main()
   
   Array<int> *two = new Array<int>(1000000);
   (*two)[0] = 4;
-  (*two)[1] = -1;
-  ArrayIter<int>* x = new ArrayIter<int>(*two);
-  printf("Val is %d\n", *(*x));
-  printf("Val is %d\n", (*x)[1]);
-   printf("Val is %d\n", (*x)[-1]);
-  delete two;
+  (*two)[1] = -7;
+  ArrayIter<int> test = ArrayIter<int>(*two);
+  printf("Val is %d\n", *(test));
+  printf("Val is %d\n", (test)[1]);
+  ++test;
+  printf("Val is %d\n", *(test));
+  printf("Val is %d\n", (test)[-1]);
+  --test;
+  printf("Val is %d\n", *(test));
+  printf("Val is %d\n", (test)[1]);
 }
