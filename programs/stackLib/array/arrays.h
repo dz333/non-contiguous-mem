@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 #define PAGE_SIZE (1024*32)
 #define PTRS_PER_PAGE (PAGE_SIZE / sizeof(void*))
 #define MAX_PAGES (PTRS_PER_PAGE * PTRS_PER_PAGE)
@@ -12,8 +11,8 @@
 #define single (num_data_pages == 1)
 #define two_level (num_l1_pages > 1)
 
-//#define single (0)
-//#define two_level (1)
+//#define single (1)
+//#define two_level (0)
 
 #define getL1Offset(i) (i / ELEMS_PER_L2)
 #define getL2Index(i)  ((i / NUM_ELEMS) % PTRS_PER_PAGE)
@@ -38,7 +37,7 @@ public:
   Array(size_t size, size_t off);
   Array(size_t size);
   ~Array();
-  T &operator[](size_t index);
+  inline T &operator[](size_t index);
   MemRegion<T> getRegion(size_t index);
   //  void resize(size_t size);
 };
@@ -127,7 +126,7 @@ Array<T>* resize(size_t old_size, Array<T>* orig, size_t new_size) {
 }
 
 template <typename T>
-T &Array<T>::operator[](size_t index) {
+inline T &Array<T>::operator[](size_t index) {
   if (single) {
     T *entries = (T*) ptable;
     return entries[index];
