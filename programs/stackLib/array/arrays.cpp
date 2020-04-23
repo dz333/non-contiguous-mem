@@ -44,7 +44,7 @@ int main()
   printf("addr is %p\n", &opt[0]);
   MemRegion<TestStruct> teststruct = opt.getRegion(0);
   printf("Float 0 is %f\n", teststruct.minValue->v);
-  printf("Diff between min and max is %d\n", teststruct.maxValue - teststruct.minValue);
+  printf("Diff between min and max is %lu\n", teststruct.maxValue - teststruct.minValue);
   TestStruct* ptr = teststruct.minValue;
   int z = 0;
   while (ptr <= teststruct.maxValue) {
@@ -55,6 +55,8 @@ int main()
   
   Array<int> *two = new Array<int>(1000000);
   (*two)[0] = 4;
+  (*two)[1] = -1;
+  ArrayIter<int>* x = new ArrayIter<int>(*two);
+  printf("Val is %d\n", *(*x));
   delete two;
-
 }

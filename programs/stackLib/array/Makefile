@@ -6,10 +6,10 @@ OBJ = $(BASE).o
 all: library
 
 $(TARGET): $(SRC)
-	g++ -O2 -g $^ -o $(TARGET)
+	g++ -O2 -g -std=c++11 $^ -o $(TARGET)
 
 $(OBJ): $(SRC)
-	g++ -O2 -c -fPIC $^ -o $(OBJ)
+	g++ -O2 -c -std=c++11 -fPIC $^ -o $(OBJ)
 
 .PHONY: library
 

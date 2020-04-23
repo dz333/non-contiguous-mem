@@ -2,6 +2,7 @@
 #define ARRAYS_H
 #include <stdlib.h>
 #include <stdio.h>
+#include <iterator>
 
 
 #define PAGE_SIZE (1024*32)
@@ -30,49 +31,56 @@ class Array
 {
 private:
   void* ptable[PTRS_PER_PAGE];
+  size_t _capacity;
   size_t num_elems;
   size_t num_l1_pages;
   size_t num_data_pages;
   
 public:
+
   Array(size_t size, size_t off);
   Array(size_t size);
   ~Array();
-  T &operator[](size_t index);
+  T& operator[](size_t index);
   MemRegion<T> getRegion(size_t index);
+  bool empty() { return num_elems == 0; }
+  void clear() { num_elems = 0; }
+  size_t capacity() { return _capacity; }
+  size_t size() { return num_elems; }
+
   //  void resize(size_t size);
 };
 
 template <typename T>
 Array<T>::Array(size_t size)
 {
+  _capacity = num_data_pages * NUM_ELEMS;
   num_elems = size;
   num_data_pages = (size / NUM_ELEMS) + 1;
   num_l1_pages = (num_data_pages / PTRS_PER_PAGE) + 1;
   //  printf("Size of element is %lu\n", sizeof(T));
-  //printf("Num pages allocated is %lu\n", num_data_pages);
-  // printf("Number of l1 pages is %lu\n", num_l1_pages);
+  //  printf("Num pages allocated is %lu\n", num_data_pages);
+  //  printf("Number of l1 pages is %lu\n", num_l1_pages);
     
   if (num_data_pages > MAX_PAGES) {
     printf("Cant support that many pages!!\n");
     exit(1);
   }
-  num_elems = size;
-  if (num_data_pages > 1) {
+  if (!single) {
     if (two_level) {
       for (size_t i = 0; i < num_l1_pages; i++) {
-	void* l1_page = malloc(PAGE_SIZE);
-	ptable[i] = l1_page;
-	size_t l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
-	for (size_t j = 0; j < l2pages; j++) {
-	  void **l1_page_cast = (void **)l1_page;
-	  l1_page_cast[j] = malloc(PAGE_SIZE);
-	}
-      }
+	      void* l1_page = malloc(PAGE_SIZE);
+	      ptable[i] = l1_page;
+	      size_t l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
+	      for (size_t j = 0; j < l2pages; j++) {
+	        void **l1_page_cast = (void **)l1_page;
+	        l1_page_cast[j] = malloc(PAGE_SIZE);
+	        }
+       }
     } else {
       for (size_t i = 0; i < num_data_pages; i++) {
-	void* page = malloc(PAGE_SIZE);
-	ptable[i] = page;
+	      void* page = malloc(PAGE_SIZE);
+	      ptable[i] = page;
       }
     }
   }
@@ -83,16 +91,16 @@ Array<T>::~Array() {
   if (!single) {
     if (two_level) {
       for (size_t i = 0; i < num_l1_pages; i++) {
-	void **l1_page = (void**) ptable[i];
-	size_t l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
-	for (size_t j = 0; j < l2pages; j++) {
-	  free(l1_page[j]);
-	}
-	free(l1_page);
+	      void **l1_page = (void**) ptable[i];
+	      size_t l2pages = (i == num_l1_pages - 1) ? num_data_pages % PTRS_PER_PAGE : PTRS_PER_PAGE;
+	      for (size_t j = 0; j < l2pages; j++) {
+	        free(l1_page[j]);
+	      }
+	      free(l1_page);
       }
     } else {
       for (size_t i = 0; i < num_data_pages; i++) {
-	free(ptable[i]);
+	      free(ptable[i]);
       }
     }
   }
@@ -198,7 +206,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
   MemRegion<T> result;
   if (single) {
     T *entries = (T*) ptable;
-    size_t end = NUM_ELEMS > num_elems ? num_elems - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS > _capacity ? _capacity - 1 : NUM_ELEMS - 1;
     result.minValue = &(entries[index]);
     result.maxValue = &(entries[end]);
   } else if (two_level) {
@@ -208,7 +216,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t pageno = getL2Index(index);
     size_t offset = getL2Offset(index);
     T *page = l1_page[pageno];
-    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS + (index - offset) > _capacity ? _capacity - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
   } else {
@@ -216,11 +224,22 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t pageno = index / NUM_ELEMS;
     size_t offset = index % NUM_ELEMS;
     T *page = entries[pageno];
-    size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
+    size_t end = NUM_ELEMS + (index - offset) > _capacity ? _capacity - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
   }
   return result;
 }
 
+template <typename V>
+class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>> {
+  public:
+    using difference_type = typename std::iterator<std::random_access_iterator_tag, Array<V>>::difference_type;
+    ArrayIter() : _array(nullptr), cursor(0) {};
+    ArrayIter(Array<V> &arr) : _array(arr) {};
+    inline V& operator*() { return _array[cursor]; }
+  private:
+    Array<V> _array;
+    size_t cursor;
+};
 #endif
