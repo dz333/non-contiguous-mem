@@ -45,6 +45,10 @@ int main()
   MemRegion<TestStruct> teststruct = opt.getRegion(0);
   printf("Float 0 is %f\n", teststruct.minValue->v);
   printf("Diff between min and max is %lu\n", teststruct.maxValue - teststruct.minValue);
+  teststruct = opt.getRegion(10000000);
+  printf("Last region val is %p\n", teststruct.minValue);
+  teststruct = opt.getRegion( 9999999);
+  printf("Last region val is %p\n", teststruct.minValue);
   TestStruct* ptr = teststruct.minValue;
   int z = 0;
   while (ptr <= teststruct.maxValue) {
@@ -63,9 +67,11 @@ int main()
   printf("Val is %d\n", *(test));
   printf("Val is %d\n", (test)[1]);
   ++test;
+  test++;
   printf("Val is %d\n", *(test));
   printf("Val is %d\n", (test)[-1]);
   --test;
+  test--;
   printf("Val is %d\n", *(test));
   printf("Val is %d\n", (test)[1]);
   test += 2;
@@ -93,5 +99,7 @@ int main()
   swap(y, test);
   printf("Val is %d\n", *y);
   printf("Val is %d\n", y[1]);
+  printf("y - test is %ld\n", y - test);
+  printf("test - y is %ld\n", test - y);
   delete two;
 }

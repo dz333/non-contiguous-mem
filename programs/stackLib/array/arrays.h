@@ -9,10 +9,10 @@
 #define MAX_PAGES (PTRS_PER_PAGE * PTRS_PER_PAGE)
 #define NUM_ELEMS (PAGE_SIZE / sizeof(T))
 #define ELEMS_PER_L2 (PTRS_PER_PAGE * NUM_ELEMS)
-#define single (num_data_pages == 1)
+#define SINGLE_LEVEL (num_data_pages == 1)
 #define two_level (num_l1_pages > 1)
 
-//#define single (1)
+//#define SINGLE_LEVEL (1)
 //#define two_level (0)
 
 #define getL1Offset(i) (i / ELEMS_PER_L2)
@@ -60,7 +60,7 @@ Array<T>::Array(size_t size)
     printf("Cant support that many pages!!\n");
     exit(1);
   }
-  if (!single) {
+  if (!SINGLE_LEVEL) {
     if (two_level) {
       for (size_t i = 0; i < num_l1_pages; i++) {
 	      void* l1_page = malloc(PAGE_SIZE);
@@ -82,7 +82,7 @@ Array<T>::Array(size_t size)
 
 template <typename T>
 Array<T>::~Array() {
-  if (!single) {
+  if (!SINGLE_LEVEL) {
     if (two_level) {
       for (size_t i = 0; i < num_l1_pages; i++) {
 	      void **l1_page = (void**) ptable[i];
@@ -130,7 +130,7 @@ Array<T>* resize(size_t old_size, Array<T>* orig, size_t new_size) {
 
 template <typename T>
 inline T &Array<T>::operator[](size_t index) {
-  if (single) {
+  if (SINGLE_LEVEL) {
     T *entries = (T*) ptable;
     return entries[index];
   } else if (two_level) {
@@ -152,7 +152,7 @@ inline T &Array<T>::operator[](size_t index) {
 
 template <typename T>
 const inline T &Array<T>::operator[](size_t index) const {
-  if (single) {
+  if (SINGLE_LEVEL) {
     T *entries = (T*) ptable;
     return entries[index];
   } else if (two_level) {
@@ -216,10 +216,11 @@ void copyOutOf(void* destptr, Array<T>* srcptr, size_t startIdx, size_t count) {
   }
 }
 
+//TODO handle OOB calls better (nullptr?)
 template <typename T>
 MemRegion<T> Array<T>::getRegion(size_t index) {
   MemRegion<T> result;
-  if (single) {
+  if (SINGLE_LEVEL) {
     T *entries = (T*) ptable;
     size_t end = NUM_ELEMS > num_elems ? num_elems - 1 : NUM_ELEMS - 1;
     result.minValue = &(entries[index]);
@@ -249,7 +250,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
 template <typename T>
 MemRegion<T> Array<T>::getEndRegion(size_t index) {
   MemRegion<T> result;
-  if (single) {
+  if (SINGLE_LEVEL) {
     T *entries = (T*) ptable;
     result.minValue = &(entries[0]);
     result.maxValue = &(entries[index]);
@@ -274,18 +275,18 @@ MemRegion<T> Array<T>::getEndRegion(size_t index) {
 }
 
 template <typename V>
-class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>> {
+class ArrayIter : public std::iterator<std::random_access_iterator_tag, V> {
   public:
-    using difference_type = typename std::iterator<std::random_access_iterator_tag, Array<V>>::difference_type;
+    using difference_type = typename std::iterator<std::random_access_iterator_tag, V>::difference_type;
     //Constructors
-    ArrayIter() : _array(nullptr), _index(0), _cursor(nullptr), _window({.minValue = nullptr, .maxValue = nullptr}) {};
+    ArrayIter() : _array(nullptr), _index(0), _window({.minValue = nullptr, .maxValue = nullptr}), _cursor(nullptr) {};
     ArrayIter(Array<V> *arr) : _array(arr), _index(0), _window(arr->getRegion(0)), _cursor(_window.minValue) {};
-    ArrayIter(const ArrayIter &rhs) : _array(rhs._array), _cursor(rhs._cursor), _window(rhs._window), _index(rhs._index) {};
+    ArrayIter(const ArrayIter &rhs) : _array(rhs._array), _index(rhs._index), _window(rhs._window), _cursor(rhs._cursor)  {};
     inline ArrayIter& operator=(const ArrayIter &rhs) {
       _array = rhs._array;
       _index = rhs._index;
-      _cursor = rhs._cursor;
       _window = rhs._window;
+      _cursor = rhs._cursor;
       return *this;
     }
     //Accessors
@@ -309,6 +310,11 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
       }
       return *this;
     };
+    inline ArrayIter operator++(int) { 
+      ArrayIter tmp(*this);
+      ++(*this); 
+      return tmp;
+    }
     inline ArrayIter& operator--() {
       _index--;
       if (_cursor > _window.minValue) {
@@ -321,6 +327,11 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
       }
       return *this;
     };
+    inline ArrayIter operator--(int) { 
+      ArrayIter tmp(*this);
+      --(*this); 
+      return tmp;
+    }
     inline ArrayIter& operator+=(difference_type rhs) {
       _index += rhs;
       _cursor += rhs;
@@ -352,6 +363,9 @@ class ArrayIter : public std::iterator<std::random_access_iterator_tag, Array<V>
       ArrayIter tmp(*this);
       tmp -= rhs;
       return tmp;
+    }
+    inline difference_type operator-(const ArrayIter& rhs) const {
+      return _index - rhs._index;
     }
     //Tests
     inline bool operator==(const ArrayIter& rhs) const {return _cursor == rhs._cursor;}
