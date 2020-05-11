@@ -9,15 +9,15 @@
 int main(int argc, char **argv) {
   RBTree tree;
   Timer t;
-  unsigned long num_nodes = argc > 1 ? (1l << atol(argv[1])) : 0;
+  unsigned long num_nodes = argc > 1 ? atol(argv[1]) : 0;
   int num_traversals = argc > 2 ? (atoi(argv[2])) : 0;
   std::cout << "Num Nodes: " << num_nodes << std::endl;
-  /*  std::random_device rd;
+  std::random_device rd;
   std::default_random_engine e1(rd());
-  std::uniform_int_distribution<long> uniform_dist(0, LONG_MAX); */
+  std::uniform_int_distribution<long> uniform_dist(0, LONG_MAX);
   t.Start();
   for (unsigned long i = 0; i < num_nodes; i++) {
-    tree.insertValue(i);
+    tree.insertValue(uniform_dist(e1));
   }
   t.Stop();
   PrintTime("Build Time", t.Seconds());
