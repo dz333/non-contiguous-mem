@@ -23,6 +23,8 @@ template<class T>
 struct MemRegion {
   T* minValue;
   T* maxValue;
+  T** pMin;
+  T** pMax;
 };
 
 template <typename T>
@@ -40,11 +42,17 @@ public:
   Array(size_t size);
   ~Array();
   inline T &operator[](size_t index);
+  inline size_t getPageSize();
   const inline T &operator[](size_t index) const ;
   MemRegion<T> getRegion(size_t index);
   MemRegion<T> getEndRegion(size_t index);
   //  void resize(size_t size);
 };
+
+template <typename T>
+size_t Array<T>::getPageSize() {
+  return NUM_ELEMS;
+}
 
 template <typename T>
 Array<T>::Array(size_t size)
@@ -225,6 +233,8 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t end = NUM_ELEMS > num_elems ? num_elems - 1 : NUM_ELEMS - 1;
     result.minValue = &(entries[index]);
     result.maxValue = &(entries[end]);
+    result.pMin = NULL;
+    result.pMax = NULL;
   } else if (two_level) {
     T ***entries = (T***) ptable;
     size_t l1off = getL1Offset(index);
@@ -235,6 +245,8 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
+    result.pMin = &(l1_page[l1off]);
+    result.pMax = &(l1_page[PTRS_PER_PAGE-1]);
   } else {
     T **entries = (T**) ptable;
     size_t pageno = index / NUM_ELEMS;
@@ -243,6 +255,8 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
+    result.pMin = &(entries[pageno]);
+    result.pMax = &(entries[num_elems]);
   }
   return result;
 }

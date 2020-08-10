@@ -5,7 +5,7 @@ TARGET = $(BASE)
 LL = main.ll
 ASM = main.S
 
-GCCFLAGS=-std=c++11 -O2 -Wall
+GCCFLAGS=-std=c++11 -O2 -Wall -D DEBUG
 
 
 ifdef SPLIT
@@ -19,7 +19,7 @@ else
 LINK =
 endif
 
-all: chase chase_array scan scan_array scan_opt strided strided_array
+all: chase chase_array scan scan_array scan_opt strided strided_array strided_opt
 
 array: chase_array scan_array scan_opt strided_array
 
@@ -65,6 +65,9 @@ strided_array: $(SRC)
 
 strided_array.S: $(SRC)
 	g++ $(GCCFLAGS) -S -D ARRAYOBJ -D STRIDE $^ $(LINK) -o $@
+
+strided_opt: $(SRC)
+	g++ $(GCCFLAGS) -D ARRAYOBJ -D STRIDE -D OPT $^ $(LINK) -o $@
 
 clean:
 	rm -f chase chase_array scan scan_array scan_opt strided strided_array $(LL) $(ASM) *~

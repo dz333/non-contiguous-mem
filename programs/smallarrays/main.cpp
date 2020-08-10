@@ -5,7 +5,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <math.h>
-
 #ifdef DEBUG
 #define DPRINT(x,y) printf(x,y);
 #else
@@ -38,6 +37,31 @@ int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
   return sum;
 }
 
+int doOptStride(Array<int> vals, size_t size, unsigned long iterations) {
+  for (unsigned long i = 0; i < size; i++) {
+    vals[i] = (i+1) * 1734;
+  }
+  
+  unsigned long sum = 0;
+  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
+  unsigned long total = iterations / innerloop;
+  size_t pageSize = vals.getPageSize();
+  for (unsigned long j = 0; j < total; j++) {
+    MemRegion<int> r = vals.getRegion(0);
+    while(r.pMin <= r.pMax) {
+      while(r.minValue <= r.maxValue) {
+	sum += *(r.minValue);
+	r.minValue += PAGE_INT_OFFSET;
+      }
+      size_t rem = r.minValue - r.maxValue;
+      r.minValue = r.pMin[1];
+      r.maxValue = r.minValue + pageSize;
+      r.minValue += rem;
+      r.pMin++;
+    }
+  }
+  return sum;
+}
 
 #ifndef ARRAYOBJ
 int doWork(int* vals, size_t size, unsigned long iterations) {
@@ -100,7 +124,11 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
  
 #ifndef SCAN
  #ifdef STRIDE
-  #define FUNC doStridedAccess
+  #ifdef OPT
+   #define FUNC doOptStride
+  #else
+   #define FUNC doStridedAccess
+  #endif
  #else
   #define FUNC doWork
  #endif
