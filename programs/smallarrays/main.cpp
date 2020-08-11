@@ -45,19 +45,25 @@ int doOptStride(Array<int> vals, size_t size, unsigned long iterations) {
   unsigned long sum = 0;
   unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
   unsigned long total = iterations / innerloop;
-  size_t pageSize = vals.getPageSize();
+  size_t pageSize = vals.getPageSize() - 1;
   for (unsigned long j = 0; j < total; j++) {
-    MemRegion<int> r = vals.getRegion(0);
-    while(r.pMin <= r.pMax) {
-      while(r.minValue <= r.maxValue) {
-	sum += *(r.minValue);
-	r.minValue += PAGE_INT_OFFSET;
+    size_t cnt = 0;
+    while (cnt < size) {
+      MemRegion<int> r = vals.getRegion(cnt);
+      while(r.pMin <= r.pMax && cnt < size) {
+	while(r.minValue <= r.maxValue && cnt < size) {
+	  sum += *(r.minValue);
+	  r.minValue += PAGE_INT_OFFSET;
+	  cnt += PAGE_INT_OFFSET;
+	}
+	size_t rem = r.minValue - r.maxValue - 1;
+	if (r.pMin) {
+	  r.minValue = r.pMin[1];
+	  r.maxValue = r.minValue + pageSize;
+	  r.minValue += rem;
+	}
+	r.pMin++;
       }
-      size_t rem = r.minValue - r.maxValue;
-      r.minValue = r.pMin[1];
-      r.maxValue = r.minValue + pageSize;
-      r.minValue += rem;
-      r.pMin++;
     }
   }
   return sum;

@@ -70,4 +70,4 @@ strided_opt: $(SRC)
 	g++ $(GCCFLAGS) -D ARRAYOBJ -D STRIDE -D OPT $^ $(LINK) -o $@
 
 clean:
-	rm -f chase chase_array scan scan_array scan_opt strided strided_array $(LL) $(ASM) *~
+	rm -f chase chase_array scan scan_array scan_opt strided strided_array strided_opt $(LL) $(ASM) *~

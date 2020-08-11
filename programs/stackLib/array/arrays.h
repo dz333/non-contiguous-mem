@@ -245,7 +245,7 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
-    result.pMin = &(l1_page[l1off]);
+    result.pMin = &(l1_page[pageno]);
     result.pMax = &(l1_page[PTRS_PER_PAGE-1]);
   } else {
     T **entries = (T**) ptable;
