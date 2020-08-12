@@ -5,7 +5,7 @@ TARGET = $(BASE)
 LL = main.ll
 ASM = main.S
 
-GCCFLAGS=-std=c++11 -O2 -Wall -D DEBUG
+GCCFLAGS=-std=c++11 -O2 -Wall
 
 
 ifdef SPLIT

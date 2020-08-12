@@ -41,28 +41,30 @@ int doOptStride(Array<int> vals, size_t size, unsigned long iterations) {
   for (unsigned long i = 0; i < size; i++) {
     vals[i] = (i+1) * 1734;
   }
-  
   unsigned long sum = 0;
   unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
   unsigned long total = iterations / innerloop;
-  size_t pageSize = vals.getPageSize() - 1;
+  const size_t pageSize = vals.getPageSize();
+  const size_t l1elems = pageSize * (1024*32 / sizeof(void*));
   for (unsigned long j = 0; j < total; j++) {
     size_t cnt = 0;
+    Iterator<int> it = vals.getIterator();
     while (cnt < size) {
-      MemRegion<int> r = vals.getRegion(cnt);
-      while(r.pMin <= r.pMax && cnt < size) {
-	while(r.minValue <= r.maxValue && cnt < size) {
-	  sum += *(r.minValue);
-	  r.minValue += PAGE_INT_OFFSET;
-	  cnt += PAGE_INT_OFFSET;
-	}
-	size_t rem = r.minValue - r.maxValue - 1;
-	if (r.pMin) {
-	  r.minValue = r.pMin[1];
-	  r.maxValue = r.minValue + pageSize;
-	  r.minValue += rem;
-	}
-	r.pMin++;
+      if (cnt < it.pageLeft) {
+	sum += *it.pageBegin;
+	cnt += PAGE_INT_OFFSET;
+	it.pageBegin += PAGE_INT_OFFSET;
+      } else if (cnt < it.parentLeft) {
+	it.parentBegin++;
+	it.pageBegin = *it.parentBegin;
+	it.pageBegin += cnt - it.pageLeft;
+	it.pageLeft += pageSize;
+      } else {
+	it.topLevel++;
+	it.parentBegin = *it.topLevel;
+	it.parentLeft += l1elems;
+	it.pageBegin = *it.parentBegin;
+	it.pageLeft += pageSize;
       }
     }
   }
