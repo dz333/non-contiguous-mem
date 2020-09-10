@@ -28,9 +28,9 @@ int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
     vals[i] = (i+1) * 1734;
   }
   unsigned long sum = 0;
-  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
-  unsigned long total = iterations / innerloop;
-  for (unsigned long j = 0; j < total; j++) {
+  //  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
+  //  unsigned long total = iterations / innerloop;
+  for (unsigned long j = 0; j < iterations * PAGE_INT_OFFSET; j++) {
     for (size_t idx = 0; idx < size; idx += PAGE_INT_OFFSET) {
       sum += vals[idx];
     }
@@ -115,9 +115,8 @@ int main(int argc, char **argv) {
   unsigned long n = argc > 1 ? atol(argv[1]) : 0;
   n = 1l << n;
   unsigned long m = argc > 2 ? atol(argv[2]) : 20;
-  m = 1l << m;
   DPRINT("Size of array is %lu\n",n);
-  DPRINT("Numer of Accessis is %lu\n",m);
+  DPRINT("Numer of Accesses is %lu\n",m);
 #ifndef ARRAYOBJ
   int* x = (int*) malloc(n * sizeof(int));
   int result = FUNC((int*)x, n, m);
