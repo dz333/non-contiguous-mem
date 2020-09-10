@@ -5,7 +5,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <math.h>
-
 #ifdef DEBUG
 #define DPRINT(x,y) printf(x,y);
 #else
@@ -38,6 +37,39 @@ int doStridedAccess(Array<int> vals, size_t size, unsigned long iterations) {
   return sum;
 }
 
+int doOptStride(Array<int> vals, size_t size, unsigned long iterations) {
+  for (unsigned long i = 0; i < size; i++) {
+    vals[i] = (i+1) * 1734;
+  }
+  unsigned long sum = 0;
+  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
+  unsigned long total = iterations / innerloop;
+  const size_t pageSize = vals.getPageSize();
+  const size_t l1elems = pageSize * (1024*32 / sizeof(void*));
+  for (unsigned long j = 0; j < total; j++) {
+    size_t cnt = 0;
+    Iterator<int> it = vals.getIterator();
+    while (cnt < size) {
+      if (cnt < it.pageLeft) {
+	sum += *it.pageBegin;
+	cnt += PAGE_INT_OFFSET;
+	it.pageBegin += PAGE_INT_OFFSET;
+      } else if (cnt < it.parentLeft) {
+	it.parentBegin++;
+	it.pageBegin = *it.parentBegin;
+	it.pageBegin += cnt - it.pageLeft;
+	it.pageLeft += pageSize;
+      } else {
+	it.topLevel++;
+	it.parentBegin = *it.topLevel;
+	it.parentLeft += l1elems;
+	it.pageBegin = *it.parentBegin;
+	it.pageLeft += pageSize;
+      }
+    }
+  }
+  return sum;
+}
 
 #ifndef ARRAYOBJ
 int doWork(int* vals, size_t size, unsigned long iterations) {
@@ -100,7 +132,11 @@ int doOptScan(Array<int> vals, size_t size, unsigned long iterations) {
  
 #ifndef SCAN
  #ifdef STRIDE
-  #define FUNC doStridedAccess
+  #ifdef OPT
+   #define FUNC doOptStride
+  #else
+   #define FUNC doStridedAccess
+  #endif
  #else
   #define FUNC doWork
  #endif

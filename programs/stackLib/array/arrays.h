@@ -25,6 +25,19 @@ struct MemRegion {
   T* maxValue;
 };
 
+template<class T>
+struct Iterator {
+  size_t size;
+  size_t l1_pages;
+  size_t data_pages;
+  T* pageBegin;
+  size_t pageLeft;
+  T** parentBegin;
+  size_t parentLeft;
+  T*** topLevel;
+  size_t topSize;
+};
+
 template <typename T>
 class Array
 {
@@ -40,11 +53,18 @@ public:
   Array(size_t size);
   ~Array();
   inline T &operator[](size_t index);
+  inline size_t getPageSize();
+  Iterator<T> getIterator();
   const inline T &operator[](size_t index) const ;
   MemRegion<T> getRegion(size_t index);
   MemRegion<T> getEndRegion(size_t index);
   //  void resize(size_t size);
 };
+
+template <typename T>
+size_t Array<T>::getPageSize() {
+  return NUM_ELEMS;
+}
 
 template <typename T>
 Array<T>::Array(size_t size)
@@ -243,6 +263,37 @@ MemRegion<T> Array<T>::getRegion(size_t index) {
     size_t end = NUM_ELEMS + (index - offset) > num_elems ? num_elems - index + offset - 1 : NUM_ELEMS - 1;
     result.minValue = &(page[offset]);
     result.maxValue = &(page[end]);
+  }
+  return result;
+}
+
+template <typename T>
+Iterator<T> Array<T>::getIterator() {
+  Iterator<T> result;
+  result.size = num_elems;
+  result.l1_pages = num_l1_pages;
+  result.data_pages = num_data_pages;
+  if (SINGLE_LEVEL) {
+    T *entries = (T*) ptable;
+    result.pageBegin = entries;
+    result.pageLeft = num_elems;
+  } else if (two_level) {
+    T ***entries = (T***) ptable;
+    result.topLevel = entries;
+    result.topSize = num_elems;
+    T **l1_page = entries[0];
+    result.parentBegin = l1_page;
+    result.parentLeft = ELEMS_PER_L2;
+    T *page = l1_page[0];
+    result.pageBegin = page;
+    result.pageLeft = NUM_ELEMS;
+  } else {
+    T **entries = (T**) ptable;
+    result.parentBegin = entries;
+    result.parentLeft = num_elems;
+    T *page = entries[0];
+    result.pageBegin = page;
+    result.pageLeft = NUM_ELEMS;
   }
   return result;
 }
