@@ -42,8 +42,8 @@ int doOptStride(Array<int> vals, size_t size, unsigned long iterations) {
     vals[i] = (i+1) * 1734;
   }
   unsigned long sum = 0;
-  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
-  unsigned long total = iterations / innerloop;
+  //  unsigned long innerloop = (size / PAGE_INT_OFFSET) + 1;
+  unsigned long total = iterations * PAGE_INT_OFFSET;
   const size_t pageSize = vals.getPageSize();
   const size_t l1elems = pageSize * (1024*32 / sizeof(void*));
   for (unsigned long j = 0; j < total; j++) {
