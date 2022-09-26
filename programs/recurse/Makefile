@@ -16,7 +16,7 @@ endif
 all: $(TARGET)
 
 $(LL): $(SRC)
-	clang++ -O2 $(SPLITARG) $^ -S -emit-llvm -o $@
+	clang++ -O1 $(SPLITARG) $^ -S -emit-llvm -o $@
 
 $(ASM): $(LL)
 	llc $< -o $@

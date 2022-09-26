@@ -31,8 +31,8 @@ int rec(int x) {
 int main(int argc, char **argv) {
   int n = argc > 1 ? atol(argv[1]) : 0;
   printf("Number is: %d\n", n);
-  //  printf("Do the thing: %d\n", dynamic(100000, 11));
-  printf("Rec is: %d\n", rec(n));
+  printf("Do the thing: %d\n", dynamic(100000, 11));
+  //printf("Rec is: %d\n", rec(n));
   return 0;
 }
   
